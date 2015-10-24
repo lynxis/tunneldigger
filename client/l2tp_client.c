@@ -1135,7 +1135,7 @@ int main(int argc, char **argv)
   int broker_cnt = 0;
 
   char c;
-  while ((c = getopt(argc, argv, "hfu:l:b:p:i:s:t:L:I:")) != EOF) {
+  while ((c = getopt(argc, argv, "hfu:l:b:p:i:s:t:L:I:")) != -1) {
     switch (c) {
       case 'h': {
         show_help(argv[0]);
