@@ -42,6 +42,7 @@ try:
   from gevent import subprocess as gevent_subprocess
 except ImportError:
   import gevent_subprocess
+import binascii
 
 # Control message for our protocol; first few bits are special as we have to
 # maintain compatibility with LTPv3 in the kernel (first bit must be 1); also
@@ -72,6 +73,7 @@ CONTROL_TYPE_PMTUD     = 0x06
 CONTROL_TYPE_PMTUD_ACK = 0x07
 CONTROL_TYPE_REL_ACK   = 0x08
 CONTROL_TYPE_PMTU_NTFY = 0x09
+CONTROL_TYPE_USAGE     = 0x0A
 
 # Reliable messages (0x80 - 0xFF)
 MASK_CONTROL_TYPE_RELIABLE = 0x80
@@ -916,6 +918,22 @@ class TunnelManager(object):
     self.cookies.put(endpoint, cookie)
     return cookie
 
+  def usage(self, endpoint):
+    """
+    returns usage information
+
+    :param endpoint: Endpoint tuple
+    :return: Usage information (2 byte)
+      0 (broker is not used)..65536 (broker is used too hard)
+    """
+
+    val = int( 1.0 * (len(self.tunnels) / (self.max_tunnels * 1.0)) * 65535)
+    val = hex(val)[2:]
+    if len(val)  % 2 == 1:
+      val = '0' + val
+
+    return binascii.unhexlify(val)
+
   def verify_cookie(self, endpoint, cookie):
     """
     Verifies if the endpoint has generated a valid cookie.
@@ -1118,6 +1136,10 @@ class MessageHandler(object):
       # Respond with a cookie
       self.send_message(socket, CONTROL_TYPE_COOKIE, self.manager.issue_cookie(address),
         address)
+    elif msg.type == CONTROL_TYPE_USAGE:
+      # Respond with usage information
+      usage = self.manager.usage(address)
+      self.send_message(socket, CONTROL_TYPE_USAGE, usage, address)
     elif msg.type == CONTROL_TYPE_PREPARE:
       # Parse the prepare message
       try:
