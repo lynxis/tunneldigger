@@ -41,6 +41,7 @@ pip install -r /srv/tunneldigger/broker/requirements.txt
 # configure tunneldigger
 cp /srv/tunneldigger/broker/l2tp_broker.cfg.example /srv/tunneldigger/broker/l2tp_broker.cfg
 sed -i "s/127.0.0.1/$IP/g" /srv/tunneldigger/broker/l2tp_broker.cfg
+sed -i "s/interface=lo/interface=eth1/g" /srv/tunneldigger/broker/l2tp_broker.cfg
 
 # start
 exec /srv/env_tunneldigger/bin/python /srv/tunneldigger/broker/l2tp_broker.py /srv/tunneldigger/broker/l2tp_broker.cfg
