@@ -196,7 +196,7 @@ def prepare_containers(context, client_rev, server_rev):
 
     for cont in [client, server]:
         configure_mounts(cont)
-        if not cont.start():
+        if not cont.start(useinit=True, close_fds=True):
           raise RuntimeError("Can not start container %s" % cont.name)
         sleep(3)
         if not check_ping(cont, 'google.com', 20):
