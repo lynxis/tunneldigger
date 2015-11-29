@@ -1066,6 +1066,18 @@ void context_process(l2tp_context *ctx)
   }
 }
 
+void cleanup()
+{
+  if (main_context) {
+    context_close_tunnel(main_context, ERROR_REASON_SHUTDOWN);
+    context_free(main_context);
+    main_context = NULL;
+  }
+
+  if (asyncns_context)
+    asyncns_free(asyncns_context);
+}
+
 void context_free(l2tp_context *ctx)
 {
   if (!ctx) {
@@ -1087,11 +1099,7 @@ void term_handler(int signum)
 
   syslog(LOG_WARNING, "Got termination signal, shutting down tunnel...");
 
-  if (main_context) {
-    context_close_tunnel(main_context, ERROR_REASON_SHUTDOWN);
-    main_context = NULL;
-  }
-
+  cleanup();
   exit(1);
 }
 
@@ -1317,8 +1325,7 @@ int main(int argc, char **argv)
     main_context = NULL;
   }
 
-  if (asyncns_context)
-    asyncns_free(asyncns_context);
+  cleanup();
 
   return 0;
 }
