@@ -25,7 +25,7 @@ def teardown_module():
 
 class TestTunneldiggerTraffic(object):
     """ tests based on a simple client & server connected to each other """
-    def __init__(self):
+    def setUp(self):
         self.suffix = "%s_%s" % (self.__class__.__name__, CONTEXT)
 
         self.server = TMPL_SERVER.clone("server" + self.suffix, None, lxc.LXC_CLONE_SNAPSHOT, bdevtype='aufs')
