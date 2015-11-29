@@ -25,28 +25,29 @@ def teardown_module():
 
 class TestTunneldiggerTraffic(object):
     """ tests based on a simple client & server connected to each other """
-    def setUp(self):
-        self.suffix = "%s_%s" % (self.__class__.__name__, CONTEXT)
 
-        self.server = TMPL_SERVER.clone("server" + self.suffix, None, lxc.LXC_CLONE_SNAPSHOT, bdevtype='aufs')
-        self.client = TMPL_CLIENT.clone("client" + self.suffix, None, lxc.LXC_CLONE_SNAPSHOT, bdevtype='aufs')
+    @classmethod
+    def setup_class(cls):
+        cls.suffix = "%s_%s" % (cls.__class__.__name__, CONTEXT)
 
-        for cont in self.server, self.client:
+        cls.server = TMPL_SERVER.clone("server" + cls.suffix, None, lxc.LXC_CLONE_SNAPSHOT, bdevtype='aufs')
+        cls.client = TMPL_CLIENT.clone("client" + cls.suffix, None, lxc.LXC_CLONE_SNAPSHOT, bdevtype='aufs')
+
+        for cont in cls.server, cls.client:
             cont.start()
             tunneldigger.check_ping(cont, 'google.com', 20)
 
-        self.spid = tunneldigger.run_server(self.server)
-        self.cpid = tunneldigger.run_client(self.client)
+        cls.spid = tunneldigger.run_server(cls.server)
+        cls.cpid = tunneldigger.run_client(cls.client)
         # explicit no Exception when ping fails
         # it's better to poll the client for a ping rather doing a long sleep
-        tunneldigger.check_ping(self.client, '192.168.254.1', 20)
+        tunneldigger.check_ping(cls.client, '192.168.254.1', 40)
 
-    def tearDown(self):
+    @classmethod
+    def teardown_class(cls):
         try:
-            for cont in self.client, self.server:
-                # dont' wait for container's init to  shut the container down
-                # hard shutdown
-                cont.shutdown(0)
+            for cont in cls.client, cls.server:
+                cont.stop()
                 cont.destroy()
         except Exception:
             pass
