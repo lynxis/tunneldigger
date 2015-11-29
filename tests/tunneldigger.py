@@ -60,7 +60,9 @@ def setup_template():
         ]
 
     container.attach_wait(lxc.attach_run_command, ["apt-get", "install", "-y"] + pkg_to_install)
-    container.shutdown(30)
+    container.shutdown(25)
+    container.wait('STOPPED', 30)
+    assert(container.state == 'STOPPED')
 
 def get_random_context():
     """ return a random hex similiar to mktemp, but do not check is already used """
