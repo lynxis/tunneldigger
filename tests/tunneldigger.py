@@ -211,6 +211,9 @@ def prepare_containers(context, client_rev, server_rev):
     if ret != 0:
         raise RuntimeError("Failed to prepare the server")
     LOG.info("ctx %s finished prepare client", context)
+
+    client.shutdown(10)
+    server.shutdown(10)
     return client, server
 
 def run_server(server):
