@@ -47,7 +47,6 @@ class TestTunneldiggerTraffic(object):
                 # dont' wait for container's init to  shut the container down
                 # hard shutdown
                 cont.shutdown(0)
-
                 cont.destroy()
         except Exception:
             pass
