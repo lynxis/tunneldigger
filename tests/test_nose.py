@@ -37,7 +37,7 @@ class TestTunneldiggerTraffic(object):
         # it's better to poll the client for a ping rather doing a long sleep
         tunneldigger.check_ping(self.client, '192.168.254.1', 20)
 
-    def teardown_class(self):
+    def tearDown(self):
         try:
             for cont in self.client, self.server:
                 # dont' wait for container's init to  shut the container down
