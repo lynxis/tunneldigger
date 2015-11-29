@@ -31,7 +31,7 @@ def setup_template():
             raise RuntimeError("failed to start container")
 
     container.attach_wait(lxc.attach_run_command, ["dhclient", "eth0"])
-    check_ping(container, '8.8.8.8', 10)
+    check_ping(container, 'google.com', 10)
     container.attach_wait(lxc.attach_run_command, ["apt-get", "update"])
     container.attach_wait(lxc.attach_run_command, ["apt-get", "dist-upgrade", "-y"])
 
@@ -199,7 +199,7 @@ def prepare_containers(context, client_rev, server_rev):
         if not cont.start():
           raise RuntimeError("Can not start container %s" % cont.name)
         sleep(3)
-        if not check_ping(cont, '8.8.8.8', 20):
+        if not check_ping(cont, 'google.com', 20):
             raise RuntimeError("Container doesn't have an internet connection %s" % cont.name)
 
     LOG.info("ctx %s prepare server", context)
