@@ -31,6 +31,10 @@ class TestTunneldiggerTraffic(object):
         self.server = TMPL_SERVER.clone("server" + self.suffix, None, lxc.LXC_CLONE_SNAPSHOT, bdevtype='aufs')
         self.client = TMPL_CLIENT.clone("client" + self.suffix, None, lxc.LXC_CLONE_SNAPSHOT, bdevtype='aufs')
 
+        for cont in self.server, self.client:
+            cont.start()
+            tunneldigger.check_ping(cont, 'google.com', 20)
+
         self.spid = tunneldigger.run_server(self.server)
         self.cpid = tunneldigger.run_client(self.client)
         # explicit no Exception when ping fails
