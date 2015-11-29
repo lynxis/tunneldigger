@@ -52,8 +52,12 @@ class TestTunneldiggerTraffic(object):
     def teardown_class(cls):
         try:
             for cont in cls.client, cls.server:
+                cont.shutdown(0)
                 cont.stop()
-                cont.destroy()
+                if cont.wait('STOPPED', 3):
+                    cont.destroy()
+                else:
+                    cont.stop(timeout=1)
         except Exception:
             pass
 
