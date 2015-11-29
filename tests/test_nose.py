@@ -43,10 +43,10 @@ class TestTunneldiggerTraffic(object):
         # it's better to poll the client for a ping rather doing a long sleep
         if not tunneldigger.check_ping(cls.client, '192.168.254.1', 20):
             LOG.warn("Client is not connected to the server!")
-            cls.client.attach_wait(lxc.attach_run_command, ['ip route show'])
-            cls.client.attach_wait(lxc.attach_run_command, ['ip address show'])
-            cls.server.attach_wait(lxc.attach_run_command, ['ip route show'])
-            cls.server.attach_wait(lxc.attach_run_command, ['ip address show'])
+            cls.client.attach_wait(lxc.attach_run_command, 'ip route show'.split())
+            cls.client.attach_wait(lxc.attach_run_command, 'ip address show'.split())
+            cls.server.attach_wait(lxc.attach_run_command, 'ip route show'.split())
+            cls.server.attach_wait(lxc.attach_run_command, 'ip address show'.split())
 
     @classmethod
     def teardown_class(cls):
