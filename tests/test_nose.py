@@ -41,7 +41,7 @@ class TestTunneldiggerTraffic(object):
         cls.cpid = tunneldigger.run_client(cls.client)
         # explicit no Exception when ping fails
         # it's better to poll the client for a ping rather doing a long sleep
-        if tunneldigger.check_ping(cls.client, '192.168.254.1', 20):
+        if not tunneldigger.check_ping(cls.client, '192.168.254.1', 20):
             LOG.warn("Client is not connected to the server!")
             cls.client.attach_wait(lxc.attach_run_command, ['ip route show'])
             cls.client.attach_wait(lxc.attach_run_command, ['ip address show'])
