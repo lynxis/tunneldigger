@@ -843,8 +843,10 @@ int context_setup_tunnel(l2tp_context *ctx, uint32_t peer_tunnel_id)
   nlmsg_free(msg);
 
   int result = nl_wait_for_ack(ctx->nl_sock);
-  if (result < 0)
+  if (result < 0) {
+    syslog(LOG_WARNING, "Failed to create tunnel via netlink (errno=%d)!", result);
     return -1;
+  }
 
   // Create a session (currently only a single session is supported)
   msg = nlmsg_alloc();
@@ -861,8 +863,10 @@ int context_setup_tunnel(l2tp_context *ctx, uint32_t peer_tunnel_id)
   nlmsg_free(msg);
 
   result = nl_wait_for_ack(ctx->nl_sock);
-  if (result < 0)
+  if (result < 0) {
+    syslog(LOG_WARNING, "Failed to create session via netlink (errno=%d)!", result);
     return -1;
+  }
 
   return 0;
 }
