@@ -78,4 +78,4 @@ class TestTunneldigger(object):
         # get id of l2tp0 iface
         second_interface_id = run_as_lxc(CLIENT, ['bash', '-c', 'ip -o link show l2tp0 | awk -F: \'{ print $1 }\''])
         print("Check l2tp is table for 5m. first id %s == %s second id " % (first_interface_id, second_interface_id))
-        assert first_interface_id == second_interface_id
+        assert first_interface_id != second_interface_id
