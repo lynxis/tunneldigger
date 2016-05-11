@@ -115,6 +115,7 @@ enum l2tp_limit_type {
 };
 
 enum l2tp_ctrl_state {
+  STATE_IDLE, /* doing nothing */
   STATE_GET_USAGE,
   STATE_GET_COOKIE,
   STATE_GET_TUNNEL,
@@ -1150,6 +1151,8 @@ void context_process(l2tp_context *ctx)
       }
       break;
     }
+    case STATE_IDLE:
+      break;
   }
 }
 
