@@ -124,6 +124,7 @@ enum l2tp_ctrl_state {
   STATE_KEEPALIVE,
   STATE_REINIT,
   STATE_RESOLVING,
+  STATE_ERROR, /* invalidates the broker */
 };
 
 typedef struct reliable_message {
@@ -1153,6 +1154,8 @@ void context_process(l2tp_context *ctx)
       }
       break;
     }
+    case STATE_ERROR:
+      break;
     case STATE_IDLE:
       break;
   }
