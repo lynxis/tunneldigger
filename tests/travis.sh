@@ -5,5 +5,6 @@
 
 export WORKSPACE=$PWD
 export PATH=/usr/bin/:/usr/sbin:/usr/local/bin:/usr/local/sbin:/bin:/sbin
+export TRAVIS=1
 unset VIRTUAL_ENV
 exec tests/jenkins.sh

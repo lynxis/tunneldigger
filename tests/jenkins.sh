@@ -2,6 +2,7 @@
 # 2015-2016 Alexander Couzens <lynxis@fe80.eu>
 #
 # jenkins script
+# also used by travis
 
 nosetests() {
   nosetests3 test_nose.py
@@ -14,8 +15,12 @@ echo "Try to compile the l2tp client"
 cd $WORKSPACE/client/
 make
 
-# prepare lxc container template
-$WORKSPACE/tests/tunneldigger.py --setup
+if [ -z "$TRAVIS" ] ; then
+  # only for jenkins.
+  # travis will do this with a different file
+  # prepare lxc container template
+  $WORKSPACE/tests/tunneldigger.py --setup
+fi
 
 # retrieve git rev
 cd $WORKSPACE/
