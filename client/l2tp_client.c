@@ -116,7 +116,8 @@ enum l2tp_limit_type {
 
 enum l2tp_ctrl_state {
   STATE_IDLE, /* doing nothing */
-  STATE_GET_USAGE,
+  STATE_USAGE_SEND, /* send out a usage package */
+  STATE_USAGE_WAIT, /* wait for receiption */
   STATE_GET_COOKIE,
   STATE_GET_TUNNEL,
   STATE_KEEPALIVE,
@@ -557,7 +558,7 @@ void context_process_control_packet(l2tp_context *ctx)
   // Check packet type
   switch (type) {
     case CONTROL_TYPE_USAGE: {
-      if (ctx->state == STATE_GET_USAGE) {
+      if (ctx->state == STATE_USAGE_WAIT) {
         // broker usage information
         ctx->usage = parse_u16(&buf);
         syslog(LOG_DEBUG, "Broker usage: %p %s %u\n", ctx, ctx->broker_hostname, ctx->usage);
@@ -1027,7 +1028,7 @@ void context_process(l2tp_context *ctx)
             ctx->state = STATE_REINIT;
           } else {
             ctx->timer_usage = timer_now();
-            ctx->state = STATE_GET_USAGE;
+            ctx->state = STATE_USAGE_SEND;
           }
           asyncns_freeaddrinfo(result);
           ctx->broker_resq = NULL;
@@ -1043,13 +1044,16 @@ void context_process(l2tp_context *ctx)
       }
       break;
     }
-    case STATE_GET_USAGE: {
-      // Get usage information if available
-      if (!is_timeout(&ctx->timer_usage, 2))
+    case STATE_USAGE_SEND: {
         context_send_packet(ctx, CONTROL_TYPE_USAGE, "UUUUUUUU", 8);
-      else
-        // Time out. The broker might not support usage. Ignore it.
-        ctx->state = STATE_GET_COOKIE;
+        ctx->timer_usage = timer_now();
+        ctx->state = STATE_USAGE_WAIT;
+        break;
+    }
+    case STATE_USAGE_WAIT: {
+      // Get usage information if available
+      if (is_timeout(&ctx->timer_usage, 2))
+        ctx->state = STATE_USAGE_SEND;
       break;
     }
     case STATE_GET_COOKIE: {
