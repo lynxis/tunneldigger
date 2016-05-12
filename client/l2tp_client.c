@@ -118,11 +118,13 @@ enum l2tp_ctrl_state {
   STATE_IDLE, /* doing nothing */
   STATE_USAGE_SEND, /* send out a usage package */
   STATE_USAGE_WAIT, /* wait for receiption */
-  STATE_GET_COOKIE,
-  STATE_GET_TUNNEL,
+  STATE_DISCOVER_SEND, /* discover a server by sending a cookie */
+  STATE_DISCOVER_WAIT, /* wait for the discover receiption  */
+  STATE_GET_COOKIE, /* get a cookie */
+  STATE_GET_TUNNEL, /* use cookie to get a tunnel */
   STATE_KEEPALIVE,
   STATE_REINIT,
-  STATE_RESOLVING,
+  STATE_RESOLVING, /* resolv an ip */
   STATE_ERROR, /* invalidates the broker */
 };
 
@@ -183,8 +185,6 @@ typedef struct {
   // Tunnel uptime
   time_t tunnel_up_since;
 
-  // Should the context only be used as a standby context
-  int standby_only;
   int standby_available;
 
   // PMTU probing
@@ -227,6 +227,7 @@ void context_free(l2tp_context *ctx);
 
 static l2tp_context *main_context = NULL;
 static asyncns_t *asyncns_context = NULL;
+static int (*select_broker)(broker_cfg *, int, int) = NULL;
 
 int broker_selector_usage(broker_cfg *brokers, int broker_cnt, int ready_cnt)
 {
@@ -423,7 +424,6 @@ int context_reinitialize(l2tp_context *ctx)
   if (setsockopt(ctx->fd, IPPROTO_IP, IP_MTU_DISCOVER, &val, sizeof(val)) < 0)
     return -1;
 
-  ctx->standby_only = 1;
   ctx->standby_available = 0;
   ctx->keepalive_seqno = 0;
   ctx->reliable_seqno = 0;
@@ -565,21 +565,17 @@ void context_process_control_packet(l2tp_context *ctx)
       break;
     }
     case CONTROL_TYPE_COOKIE: {
-      if (ctx->state == STATE_GET_COOKIE) {
         if (payload_length != 8)
           break;
 
-        memcpy(&ctx->cookie, buf, 8);
-
-        // Mark the connection as being available for later establishment
-        ctx->standby_available = 1;
-
-        // Only switch to tunnel establishment state if the context is
-        // not in standby-only state
-        if (!ctx->standby_only)
+        if(ctx->state == STATE_DISCOVER_WAIT) {
+          // Mark the connection as being available for later establishment
+          ctx->standby_available = 1;
+        } else if (ctx->state == STATE_GET_COOKIE) {
+          memcpy(&ctx->cookie, buf, 8);
           ctx->state = STATE_GET_TUNNEL;
-      }
-      break;
+        }
+        break;
     }
     case CONTROL_TYPE_ERROR: {
       if (payload_length > 0) {
@@ -1022,7 +1018,7 @@ void context_process(l2tp_context *ctx)
             ctx->state = STATE_REINIT;
           } else {
             ctx->timer_usage = timer_now();
-            ctx->state = STATE_USAGE_SEND;
+            ctx->state = STATE_DISCOVER_SEND;
           }
           asyncns_freeaddrinfo(result);
           ctx->broker_resq = NULL;
@@ -1036,6 +1032,17 @@ void context_process(l2tp_context *ctx)
         ctx->state = STATE_REINIT;
         return;
       }
+      break;
+    }
+    case STATE_DISCOVER_SEND: {
+        context_send_packet(ctx, CONTROL_TYPE_COOKIE, "XXXXXXXX", 8);
+        ctx->timer_cookie = timer_now();
+        ctx->state = STATE_DISCOVER_WAIT;
+        break;
+    }
+    case STATE_DISCOVER_WAIT: {
+      if (is_timeout(&ctx->timer_cookie, 2))
+        ctx->state = STATE_DISCOVER_SEND;
       break;
     }
     case STATE_USAGE_SEND: {
@@ -1240,7 +1247,7 @@ int main(int argc, char **argv)
   int limit_bandwidth_down = 0;
 
   broker_cfg brokers[MAX_BROKERS];
-  int (*select_broker)(broker_cfg *, int, int) = broker_selector_first_available;
+  select_broker = broker_selector_first_available;
   int broker_cnt = 0;
 
   int c;
@@ -1362,7 +1369,7 @@ int main(int argc, char **argv)
       if (ready_cnt == broker_cnt || is_timeout(&timer_collect, 20))
         break;
 
-      // First available broker just use the first one available 
+      // First available broker just use the first one available
       if (select_broker == broker_selector_first_available && ready_cnt > 0)
         break;
     }
@@ -1379,7 +1386,6 @@ int main(int argc, char **argv)
       brokers[i].port);
 
     /* activate the broker */
-    main_context->standby_only = 0;
     main_context->state = STATE_GET_COOKIE;
 
     // Perform processing on the main context; if the connection fails and does
