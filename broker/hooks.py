@@ -24,6 +24,7 @@ class HookProcess(object):
         :param args: List of script arguments
         """
 
+        logger.error("name '%s', script '%s', args '%s'" % (name, script, args))
         self.name = name
         self.process = subprocess.Popen(
             [script] + [str(x) for x in args],
