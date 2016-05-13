@@ -16,7 +16,7 @@ GIT_URL = "https://github.com/wlanslovenija/tunneldigger"
 
 LOG = logging.getLogger("test.tunneldigger")
 
-def setup_template():
+def setup_template(mount_apt=False):
     """ all test container are cloned from this one
     it's important that this container is *NOT* running!
     """
@@ -27,6 +27,10 @@ def setup_template():
                                                                    "release": "trusty",
                                                                    "arch": "amd64"}):
             raise RuntimeError("failed to create container")
+
+    if mount_apt:
+        container.append_config_item('lxc.mount.entry', '%s var/cache/apt/archives none bind,ro,create=dir 0 0' %
+                                     '/var/cache/apt/archives')
 
     if not container.running:
         if not container.start():
@@ -309,6 +313,8 @@ if __name__ == '__main__':
             help="Check if the host has all requirements installed")
     parser.add_argument('--setup', dest='setup', action='store_true', default=False,
             help="Setup the basic template. Must run once before doing the tests.")
+    parser.add_argument('--mount-apt', dest='mount_apt', action='store_true', default=False,
+            help="Mounts /var/cache/apt/archives into the container. Only valid with --setup")
     # testing arguments
     parser.add_argument('-t', '--test', dest='test', action='store_true', default=False,
             help="Do a test run. Server rev and Client rev required. See -s and -c.")
@@ -329,7 +335,7 @@ if __name__ == '__main__':
         check_host()
 
     if args.setup:
-        setup_template()
+        setup_template(args.mount_apt)
 
     if args.test:
         if not args.server or not args.client:
