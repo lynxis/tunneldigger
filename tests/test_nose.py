@@ -52,6 +52,7 @@ class TestTunneldigger(object):
     def test_ensure_tunnel_up_for_5m(self):
         # get id of l2tp0 iface
         first_interface_id = run_as_lxc(CLIENT, ['bash', '-c', 'ip -o link show l2tp0 | awk -F: \'{ print $1 }\''])
+        LOG.info("Sleeping now for 5 minutes")
         # sleep 5 minutes
         sleep(5 * 60)
         # get id of l2tp0 iface
