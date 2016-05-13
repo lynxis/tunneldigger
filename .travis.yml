@@ -4,6 +4,8 @@ python:
 sudo: required
 dist: trusty
 install:
+  - cat /etc/apt/sources.list
+  - cat /etc/apt/apt.conf.d/*
   - sudo add-apt-repository universe
   - sudo apt-get -qq update
   - sudo apt-get -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" -qq --assume-no install bison build-essential flex gawk gettext git git-core libncurses5-dev libssl-dev lxc m4 subversion unzip zlib1g-dev python3-lxc python3-nose linux-libc-dev libnl-dev
