@@ -13,7 +13,7 @@ install:
   - sudo modprobe nf_conntrack
   - sudo modprobe nf_conntrack_netlink
   - sudo iptables -t nat -L >/dev/null
-  - sudo /usr/bin/python3 ./tests/tunneldigger.py --setup
+  - sudo /usr/bin/python3 ./tests/tunneldigger.py --setup --mount-apt
 script:
   - sudo -E sh ./tests/travis.sh
 
@@ -24,3 +24,6 @@ env:
     - SELECT=nose OLD_REV=4e4f13cdc630c46909d47441093a5bdaffa0d67f
     - SELECT=usage
     - SELECT=client
+
+cache:
+  - apt
